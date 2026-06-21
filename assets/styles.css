@@ -1,0 +1,212 @@
+/* ===================== Theme & Base ===================== */
+:root {
+  --bg: #0b1020;
+  --bg-soft: #121a33;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-border: rgba(255, 255, 255, 0.1);
+  --text: #e8edf7;
+  --text-dim: #9aa6c4;
+  --primary: #5b8cff;
+  --primary-2: #7c5bff;
+  --accent: #2fd6a6;
+  --danger: #ff5c7a;
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  --radius: 18px;
+}
+html.light {
+  --bg: #eef2fb;
+  --bg-soft: #ffffff;
+  --card: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(20, 30, 60, 0.08);
+  --text: #16203a;
+  --text-dim: #5a6688;
+  --shadow: 0 18px 40px rgba(30, 50, 110, 0.12);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Vazirmatn", system-ui, -apple-system, sans-serif;
+  background: radial-gradient(1200px 700px at 80% -10%, var(--bg-soft), var(--bg));
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ===================== Animated background ===================== */
+.bg-orbs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.bg-orbs span {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5;
+  animation: float 18s ease-in-out infinite;
+}
+.bg-orbs span:nth-child(1) { width: 380px; height: 380px; background: var(--primary); top: -80px; right: -60px; }
+.bg-orbs span:nth-child(2) { width: 320px; height: 320px; background: var(--primary-2); bottom: -100px; left: -60px; animation-delay: -6s; }
+.bg-orbs span:nth-child(3) { width: 260px; height: 260px; background: var(--accent); top: 40%; left: 50%; animation-delay: -12s; opacity: .3; }
+@keyframes float { 0%,100% { transform: translateY(0) translateX(0); } 50% { transform: translateY(40px) translateX(-30px); } }
+
+/* ===================== Topbar ===================== */
+.topbar {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px; gap: 12px; flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.logo {
+  width: 52px; height: 52px; display: grid; place-items: center; font-size: 26px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  border-radius: 16px; box-shadow: var(--shadow);
+}
+.brand h1 { margin: 0; font-size: 20px; font-weight: 800; }
+.brand p { margin: 0; font-size: 12.5px; color: var(--text-dim); }
+.topbar-actions { display: flex; align-items: center; gap: 10px; }
+.badge {
+  font-size: 12px; padding: 6px 12px; border-radius: 999px; font-weight: 700;
+  border: 1px solid var(--card-border);
+}
+.badge-github { background: linear-gradient(135deg, #5b8cff33, #7c5bff33); color: var(--text); }
+.badge-self { background: linear-gradient(135deg, #2fd6a633, #5b8cff33); }
+.icon-btn {
+  width: 42px; height: 42px; border-radius: 12px; cursor: pointer; font-size: 18px;
+  background: var(--card); border: 1px solid var(--card-border); color: var(--text);
+  transition: .2s;
+}
+.icon-btn:hover { transform: translateY(-2px); }
+
+/* ===================== Tabs ===================== */
+.tabs {
+  position: relative; z-index: 2;
+  display: flex; gap: 8px; padding: 6px; margin: 0 22px; flex-wrap: wrap;
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: 16px; backdrop-filter: blur(12px);
+}
+.tab {
+  flex: 1; min-width: 110px; padding: 11px 10px; border: none; cursor: pointer;
+  background: transparent; color: var(--text-dim); font-family: inherit;
+  font-size: 14px; font-weight: 700; border-radius: 12px; transition: .2s;
+}
+.tab:hover { color: var(--text); }
+.tab.active {
+  color: #fff; background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  box-shadow: 0 8px 20px rgba(91, 140, 255, 0.35);
+}
+
+/* ===================== Container & Cards ===================== */
+.container { position: relative; z-index: 2; max-width: 920px; margin: 22px auto; padding: 0 18px 60px; }
+.panel { display: none; animation: fade .35s ease; }
+.panel.active { display: block; }
+@keyframes fade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.card {
+  background: var(--card); border: 1px solid var(--card-border);
+  border-radius: var(--radius); padding: 22px; backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+}
+.card-head { margin-bottom: 16px; }
+.card-head h2 { margin: 0 0 4px; font-size: 18px; }
+.hint { font-size: 12.5px; color: var(--text-dim); }
+.hint code, .note code { background: rgba(127,127,127,.18); padding: 2px 6px; border-radius: 6px; font-size: 12px; }
+
+/* ===================== Inputs ===================== */
+.input-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+.input-row input { flex: 1; min-width: 200px; }
+input, textarea, select {
+  width: 100%; padding: 12px 14px; border-radius: 12px; font-family: inherit;
+  font-size: 14px; color: var(--text); background: rgba(127,127,127,.1);
+  border: 1px solid var(--card-border); transition: .2s; outline: none;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,140,255,.2); }
+textarea { resize: vertical; line-height: 1.8; direction: ltr; text-align: left; }
+.field { margin: 14px 0; }
+.field label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; }
+
+/* ===================== Buttons ===================== */
+.btn {
+  padding: 11px 18px; border: none; border-radius: 12px; cursor: pointer;
+  font-family: inherit; font-size: 14px; font-weight: 700; transition: .2s; color: #fff;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn:active { transform: translateY(0); }
+.btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-2)); }
+.btn-accent { background: linear-gradient(135deg, var(--accent), #1fa9ff); }
+.btn-ghost { background: rgba(127,127,127,.15); color: var(--text); }
+.btn-danger { background: linear-gradient(135deg, var(--danger), #ff8a5c); }
+.btn-sm { padding: 8px 12px; font-size: 12.5px; }
+
+/* ===================== Lists ===================== */
+.list { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.list li {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 12px 14px; border-radius: 12px; background: rgba(127,127,127,.08);
+  border: 1px solid var(--card-border);
+}
+.list li .ch-name { font-weight: 700; direction: ltr; }
+.list li .ch-meta { font-size: 12px; color: var(--text-dim); }
+.list .del { background: var(--danger); color: #fff; border: none; border-radius: 8px; width: 30px; height: 30px; cursor: pointer; font-size: 16px; }
+.empty { text-align: center; color: var(--text-dim); padding: 24px; font-size: 14px; }
+
+/* ===================== Stats ===================== */
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0; }
+.stat {
+  text-align: center; padding: 16px 8px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(91,140,255,.12), rgba(124,91,255,.12));
+  border: 1px solid var(--card-border);
+}
+.stat span { display: block; font-size: 26px; font-weight: 800; color: var(--primary); }
+.stat label { font-size: 12px; color: var(--text-dim); }
+
+/* ===================== Output & Log ===================== */
+.output-block { margin-top: 16px; }
+.output-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.output-head h3 { margin: 0; font-size: 15px; }
+.output-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.raw-details { margin-top: 12px; }
+.raw-details summary { cursor: pointer; color: var(--text-dim); font-size: 13px; padding: 6px 0; }
+.log {
+  margin-top: 14px; padding: 12px; border-radius: 12px; background: #00000033;
+  border: 1px solid var(--card-border); font-size: 12.5px; max-height: 220px; overflow: auto;
+  direction: ltr; text-align: left; font-family: ui-monospace, monospace;
+}
+.log .ok { color: var(--accent); }
+.log .err { color: var(--danger); }
+.log .info { color: var(--primary); }
+
+/* ===================== Toggle / Note / Toast ===================== */
+.toggle-row { display: flex; align-items: center; gap: 12px; margin: 14px 0; }
+.switch { position: relative; width: 46px; height: 26px; }
+.switch input { display: none; }
+.switch span { position: absolute; inset: 0; background: rgba(127,127,127,.35); border-radius: 999px; cursor: pointer; transition: .2s; }
+.switch span::after { content: ""; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: #fff; top: 3px; right: 3px; transition: .2s; }
+.switch input:checked + span { background: var(--primary); }
+.switch input:checked + span::after { transform: translateX(-20px); }
+.note { font-size: 13px; color: var(--text-dim); background: rgba(91,140,255,.08); border: 1px solid var(--card-border); padding: 12px 14px; border-radius: 12px; margin-top: 14px; }
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(120px);
+  background: #16203a; color: #fff; padding: 12px 22px; border-radius: 12px;
+  box-shadow: var(--shadow); z-index: 50; transition: .3s; font-size: 14px; border: 1px solid var(--card-border);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ===================== Guide ===================== */
+.guide h3 { margin: 22px 0 8px; font-size: 16px; color: var(--primary); }
+.guide p, .guide li { font-size: 14px; color: var(--text); }
+.guide ol, .guide ul { padding-right: 20px; }
+.guide pre {
+  background: #00000040; border: 1px solid var(--card-border); padding: 14px;
+  border-radius: 12px; overflow: auto; direction: ltr; text-align: left; font-size: 12.5px;
+}
+.guide code { background: rgba(127,127,127,.18); padding: 2px 6px; border-radius: 6px; }
+.guide .step { border-right: 3px solid var(--primary); padding-right: 14px; margin: 14px 0; }
+
+/* ===================== Footer ===================== */
+.footer { position: relative; z-index: 2; text-align: center; color: var(--text-dim); font-size: 12.5px; padding: 24px; }
+
+/* ===================== Mobile ===================== */
+@media (max-width: 600px) {
+  .brand h1 { font-size: 17px; }
+  .tab { min-width: calc(33% - 8px); font-size: 12.5px; padding: 9px 6px; }
+  .stats { grid-template-columns: repeat(3, 1fr); }
+  .stat span { font-size: 20px; }
+  .card { padding: 16px; }
+  .output-actions { width: 100%; }
+  .output-actions .btn { flex: 1; }
+}
