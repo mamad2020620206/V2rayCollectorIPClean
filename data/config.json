@@ -1,0 +1,13 @@
+{
+  "_comment": "کانال‌ها و آی‌پی‌های تمیز خود را اینجا ویرایش کنید. سپس Action خودکار اجرا می‌شود.",
+  "channels": [
+    "free_v2ray_collector",
+    "v2ray_configs_pool"
+  ],
+  "clean_ips": [
+    "104.18.0.1:2053",
+    "104.18.0.2:8443"
+  ],
+  "per_channel": 3,
+  "only_tls": false
+}
