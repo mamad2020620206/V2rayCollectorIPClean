@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>جمع‌آوری و بهینه‌ساز کانفیگ V2Ray</title>
+  <meta name="description" content="جمع‌آوری خودکار کانفیگ V2Ray از کانال‌های تلگرام، تزریق آی‌پی تمیز و ساخت لینک ساب" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link
+    href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+</head>
+<body>
+  <div class="bg-orbs"><span></span><span></span><span></span></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">🛡️</div>
+      <div>
+        <h1>V2Ray Collector</h1>
+        <p>جمع‌آوری هوشمند کانفیگ + تزریق آی‌پی تمیز</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span class="badge badge-github" id="modeBadge">نسخه گیت‌هاب</span>
+      <button class="icon-btn" id="themeToggle" title="تغییر تم">🌙</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-tab="channels">📡 کانال‌ها</button>
+    <button class="tab" data-tab="cleanip">🧹 آی‌پی تمیز</button>
+    <button class="tab" data-tab="generate">⚡ تولید کانفیگ</button>
+    <button class="tab" data-tab="settings">⚙️ تنظیمات</button>
+    <button class="tab" data-tab="guide">📖 راهنما</button>
+  </nav>
+
+  <main class="container">
+    <!-- ============ کانال‌ها ============ -->
+    <section class="panel active" id="tab-channels">
+      <div class="card">
+        <div class="card-head">
+          <h2>📡 کانال‌های تلگرام</h2>
+          <span class="hint">آدرس یا یوزرنیم کانال عمومی را وارد کنید</span>
+        </div>
+        <div class="input-row">
+          <input type="text" id="channelInput" placeholder="مثال: @free_v2ray یا https://t.me/free_v2ray" />
+          <button class="btn btn-primary" id="addChannel">افزودن</button>
+        </div>
+        <div class="field">
+          <label>تعداد کانفیگ از هر کانال (جدیدترین‌ها)</label>
+          <input type="number" id="perChannel" min="1" max="50" value="3" />
+        </div>
+        <ul class="list" id="channelList"></ul>
+        <div class="empty" id="channelEmpty">هنوز کانالی اضافه نشده است.</div>
+      </div>
+    </section>
+
+    <!-- ============ آی‌پی تمیز ============ -->
+    <section class="panel" id="tab-cleanip">
+      <div class="card">
+        <div class="card-head">
+          <h2>🧹 آی‌پی‌های تمیز</h2>
+          <span class="hint">هر آدرس در یک خط — می‌توانید پورت هم بدهید: <code>1.2.3.4:8443</code></span>
+        </div>
+        <textarea id="cleanIPInput" rows="8" placeholder="104.18.0.1&#10;104.18.0.2:2053&#10;cf.example.com:8443"></textarea>
+        <div class="input-row">
+          <button class="btn btn-primary" id="saveCleanIP">ذخیره آی‌پی‌ها</button>
+          <button class="btn btn-ghost" id="clearCleanIP">پاک کردن</button>
+        </div>
+        <div class="note">
+          💡 هنگام تولید، هر کانفیگ با همه‌ی آی‌پی‌های تمیز ترکیب می‌شود؛ یعنی از ۱ کانفیگ به تعداد آی‌پی‌ها کانفیگ ساخته می‌شود. SNI/Host اصلی حفظ می‌گردد.
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ تولید ============ -->
+    <section class="panel" id="tab-generate">
+      <div class="card">
+        <div class="card-head">
+          <h2>⚡ تولید و خروجی</h2>
+          <span class="hint">جمع‌آوری از کانال‌ها، تزریق آی‌پی و ساخت لینک ساب</span>
+        </div>
+        <div class="input-row">
+          <button class="btn btn-primary" id="fetchBtn">🔄 جمع‌آوری از کانال‌ها</button>
+          <button class="btn btn-accent" id="buildBtn">⚙️ تولید کانفیگ نهایی</button>
+        </div>
+
+        <div class="stats" id="stats" hidden>
+          <div class="stat"><span id="statSources">0</span><label>کانفیگ سالم منبع</label></div>
+          <div class="stat"><span id="statClean">0</span><label>آی‌پی تمیز</label></div>
+          <div class="stat"><span id="statFinal">0</span><label>کانفیگ نهایی</label></div>
+        </div>
+
+        <div id="progressLog" class="log" hidden></div>
+
+        <div class="output-block" id="outputBlock" hidden>
+          <div class="output-head">
+            <h3>📋 لینک اشتراک (Subscription)</h3>
+            <div class="output-actions">
+              <button class="btn btn-sm" id="copySub">کپی لینک ساب</button>
+              <button class="btn btn-sm" id="copyRaw">کپی کانفیگ‌های خام</button>
+              <button class="btn btn-sm" id="downloadSub">دانلود فایل ساب</button>
+            </div>
+          </div>
+          <textarea id="subOutput" rows="4" readonly></textarea>
+          <details class="raw-details">
+            <summary>نمایش کانفیگ‌های نهایی</summary>
+            <textarea id="rawOutput" rows="10" readonly></textarea>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ تنظیمات ============ -->
+    <section class="panel" id="tab-settings">
+      <div class="card">
+        <div class="card-head"><h2>⚙️ تنظیمات</h2></div>
+        <div class="field">
+          <label>پروکسی CORS (برای دریافت از تلگرام در مرورگر لازم است)</label>
+          <select id="proxySelect">
+            <option value="https://api.allorigins.win/raw?url=">allorigins.win</option>
+            <option value="https://corsproxy.io/?url=">corsproxy.io</option>
+            <option value="https://thingproxy.freeboard.io/fetch/">thingproxy</option>
+            <option value="">بدون پروکسی (فقط نسخه شخصی/هاست)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>پروکسی سفارشی (اختیاری)</label>
+          <input type="text" id="customProxy" placeholder="https://your-proxy/?url=" />
+        </div>
+        <div class="toggle-row">
+          <label class="switch"><input type="checkbox" id="onlyTls" /><span></span></label>
+          <span>فقط کانفیگ‌های TLS/Reality (امن‌تر برای کلودفلر)</span>
+        </div>
+        <div class="input-row">
+          <button class="btn btn-primary" id="saveSettings">ذخیره تنظیمات</button>
+          <button class="btn btn-danger" id="resetAll">پاک کردن همه داده‌ها</button>
+        </div>
+        <div class="note" id="storageNote"></div>
+      </div>
+    </section>
+
+    <!-- ============ راهنما ============ -->
+    <section class="panel" id="tab-guide">
+      <div class="card guide">
+        <div class="card-head"><h2>📖 راهنمای کامل</h2></div>
+        <div id="guideContent"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <footer class="footer">
+    ساخته‌شده برای استفاده‌ی شخصی • همه‌ی داده‌ها در مرورگر شما (LocalStorage) ذخیره می‌شوند
+  </footer>
+
+  <script src="assets/engine.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
