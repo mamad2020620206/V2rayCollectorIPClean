@@ -100,67 +100,52 @@
     return out;
   }
 
-  /* ---------- آی‌پی/دامنه تمیز: استخراج آدرس و پورت اختیاری ---------- */
+  /* ---------- آی‌پی/دامنه تمیز ----------
+     فقط آدرس استخراج می‌شود. پورت کانفیگ اصلی هرگز تغییر نمی‌کند
+     (اگر کاربر ip:port بدهد، فقط بخش ip استفاده می‌شود). */
   function parseCleanEntry(entry) {
-    // پشتیبانی از  1.2.3.4  یا  1.2.3.4:8443  یا  domain.com:2053
     const s = entry.trim();
     if (!s) return null;
-    const m = /^([^\s:]+)(?::(\d+))?$/.exec(s);
-    if (!m) return null;
-    return { ip: m[1], port: m[2] ? parseInt(m[2], 10) : null };
+    // فقط بخش آدرس (قبل از : اول) — پورت نادیده گرفته می‌شود
+    const ip = s.split(":")[0].trim();
+    if (!ip) return null;
+    return { ip: ip };
   }
 
-  /* ---------- تزریق آی‌پی تمیز ---------- */
+  /* ---------- تزریق آی‌پی تمیز ----------
+     مطابق منطق آزموده‌شده: فقط آدرس عوض می‌شود؛ پورت، SNI، Host و
+     همه‌ی پارامترها دست‌نخورده می‌مانند تا کانفیگ سالم بماند. */
   function injectVmess(uri, clean, label) {
     const json = JSON.parse(b64DecodeUnicode(uri.slice(8)));
-    const originalAddr = json.add;
-    const tls = (json.tls || "").toLowerCase();
-    // حفظ SNI/Host اصلی به‌عنوان دامنه‌ی واقعی (تکنیک کلودفلر)
-    if (tls === "tls" || tls === "reality") {
-      if (!json.sni) json.sni = json.host || originalAddr;
-    }
-    if (!json.host && (json.net === "ws" || json.net === "h2" || json.net === "grpc")) {
-      json.host = originalAddr;
-    }
-    json.add = clean.ip;
-    if (clean.port) json.port = clean.port;
-    json.ps = (json.ps || "config") + " 🧹 " + label;
+    json.add = clean.ip; // فقط آدرس
+    const oldName = (json.ps || "Config").split(" | ")[0];
+    json.ps = oldName + " | " + clean.ip + " " + label;
     return "vmess://" + b64EncodeUnicode(JSON.stringify(json));
   }
 
   function injectUriStyle(uri, clean, label, proto) {
-    // vless / trojan با ساختار  proto://id@host:port?params#name
-    if (proto === "ss" && uri.indexOf("@") === -1) {
-      // فرمت کاملاً base64 → بازنویسی به فرمت @host
+    // ss با فرمت کاملاً base64:  ss://BASE64#name
+    if (proto === "ss" && uri.split("://")[1].split("#")[0].indexOf("@") === -1) {
       const hashIdx = uri.indexOf("#");
       const name = hashIdx > -1 ? uri.slice(hashIdx + 1) : "";
-      let body = uri.slice(5, hashIdx > -1 ? hashIdx : undefined);
-      let dec = b64DecodeUnicode(body);
+      const body = uri.slice(5, hashIdx > -1 ? hashIdx : undefined);
+      const dec = b64DecodeUnicode(body);
       const at = dec.lastIndexOf("@");
       const cred = dec.slice(0, at);
-      const hp = dec.slice(at + 1).split(":");
-      const port = clean.port || hp[1];
+      const port = dec.slice(at + 1).split(":")[1]; // پورت اصلی حفظ می‌شود
       const newBody = b64EncodeUnicode(cred + "@" + clean.ip + ":" + port);
-      return "ss://" + newBody + "#" + encodeURIComponent(decodeURIComponent(name) + " 🧹 " + label);
+      const oldName = decodeURIComponent(name).split(" | ")[0] || "Config";
+      return "ss://" + newBody + "#" + encodeURIComponent(oldName + " | " + clean.ip + " " + label);
     }
-
-    const u = new URL(uri);
-    const sp = u.searchParams;
-    const security = (sp.get("security") || "").toLowerCase();
-    const originalHost = u.hostname;
-    // حفظ SNI و Host اصلی
-    if (security === "tls" || security === "reality" || security === "xtls") {
-      if (!sp.get("sni")) sp.set("sni", originalHost);
-    }
-    if (!sp.get("host") && (sp.get("type") === "ws" || sp.get("type") === "grpc" || sp.get("type") === "httpupgrade")) {
-      sp.set("host", originalHost);
-    }
-    u.hostname = clean.ip;
-    if (clean.port) u.port = String(clean.port);
-    const baseName = decodeURIComponent((u.hash || "").slice(1)) || proto;
-    u.hash = encodeURIComponent(baseName + " 🧹 " + label);
-    u.search = sp.toString();
-    return u.toString();
+    // vless / trojan / ss(@host):  فقط host بین @ و :port عوض می‌شود
+    // ساختار:  proto://userinfo@HOST:port?params#name
+    const re = /^((?:vless|trojan|ss):\/\/[^@]+@)([^:\/?#]+)(:\d+[^#]*)?(#.*)?$/i;
+    return uri.replace(re, function (m, p1, p2, p3, p4) {
+      const params = p3 || ""; // شامل :port و ?query — دست‌نخورده
+      const oldName = (p4 ? decodeURIComponent(p4.slice(1)) : "Config").split(" | ")[0];
+      const newName = "#" + encodeURIComponent(oldName + " | " + clean.ip + " " + label);
+      return p1 + clean.ip + params + newName;
+    });
   }
 
   function inject(uri, clean, label) {
@@ -169,7 +154,7 @@
       if (proto === "vmess") return injectVmess(uri, clean, label);
       return injectUriStyle(uri, clean, label, proto);
     } catch (e) {
-      return null;
+      return uri; // در صورت خطا، خود کانفیگ اصلی برگردانده می‌شود
     }
   }
 
@@ -182,17 +167,17 @@
     const out = [];
     const report = { sourceValid: validConfigs.length, generated: 0, perConfig: cleans.length || 1 };
 
+    const emojis = ["🚀", "🔥", "⚡", "💎", "👑", "🌟", "🎯", "🛡️", "🌐", "🛸"];
     if (cleans.length === 0) {
       // بدون آی‌پی تمیز → خود کانفیگ‌ها برگردانده می‌شوند
       for (const c of validConfigs) out.push(c);
     } else {
       for (const c of validConfigs) {
-        let i = 1;
-        for (const clean of cleans) {
-          const label = clean.ip + (clean.port ? ":" + clean.port : "") + " #" + i++;
+        cleans.forEach((clean, idx) => {
+          const label = emojis[idx % emojis.length] + "-" + (idx + 1);
           const injected = inject(c, clean, label);
           if (injected) out.push(injected);
-        }
+        });
       }
     }
     const finalList = dedupe(out);
