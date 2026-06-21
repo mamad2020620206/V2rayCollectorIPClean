@@ -88,57 +88,47 @@ def is_valid(uri: str) -> bool:
 
 # ----------------------- clean ip parsing -----------------------
 def parse_clean(entry: str):
+    # فقط آدرس استخراج می‌شود؛ پورت نادیده گرفته می‌شود (پورت کانفیگ اصلی حفظ می‌شود)
     s = entry.strip()
-    m = re.match(r"^([^\s:]+)(?::(\d+))?$", s)
-    if not m:
+    if not s:
         return None
-    return {"ip": m.group(1), "port": int(m.group(2)) if m.group(2) else None}
+    ip = s.split(":")[0].strip()
+    return {"ip": ip} if ip else None
 
 
 # ----------------------- injection -----------------------
+# منطق آزموده‌شده: فقط آدرس عوض می‌شود؛ پورت/SNI/Host/پارامترها دست‌نخورده می‌مانند.
+INJECT_RE = re.compile(r"^((?:vless|trojan|ss)://[^@]+@)([^:/?#]+)(:\d+[^#]*)?(#.*)?$", re.IGNORECASE)
+
+
 def inject_vmess(uri, clean, label):
     j = json.loads(b64decode(uri[8:]))
-    orig = j.get("add")
-    tls = (j.get("tls") or "").lower()
-    if tls in ("tls", "reality") and not j.get("sni"):
-        j["sni"] = j.get("host") or orig
-    if not j.get("host") and j.get("net") in ("ws", "h2", "grpc"):
-        j["host"] = orig
-    j["add"] = clean["ip"]
-    if clean["port"]:
-        j["port"] = clean["port"]
-    j["ps"] = (j.get("ps") or "config") + " 🧹 " + label
+    j["add"] = clean["ip"]  # فقط آدرس
+    old_name = (j.get("ps") or "Config").split(" | ")[0]
+    j["ps"] = f"{old_name} | {clean['ip']} {label}"
     return "vmess://" + b64encode(json.dumps(j, ensure_ascii=False))
 
 
 def inject_uri(uri, clean, label, proto):
-    if proto == "ss" and "@" not in uri:
+    body = uri.split("://", 1)[1].split("#")[0]
+    if proto == "ss" and "@" not in body:
         hash_idx = uri.find("#")
         name = uri[hash_idx + 1:] if hash_idx > -1 else ""
-        body = uri[5:hash_idx] if hash_idx > -1 else uri[5:]
-        dec = b64decode(body)
+        b = uri[5:hash_idx] if hash_idx > -1 else uri[5:]
+        dec = b64decode(b)
         cred, hp = dec.rsplit("@", 1)
-        port = clean["port"] or hp.split(":")[1]
+        port = hp.split(":")[1]  # پورت اصلی حفظ می‌شود
         new_body = b64encode(f"{cred}@{clean['ip']}:{port}")
-        return f"ss://{new_body}#{urllib.parse.quote(urllib.parse.unquote(name) + ' 🧹 ' + label)}"
+        old_name = (urllib.parse.unquote(name).split(" | ")[0]) or "Config"
+        return f"ss://{new_body}#{urllib.parse.quote(old_name + ' | ' + clean['ip'] + ' ' + label)}"
 
-    u = urllib.parse.urlparse(uri)
-    q = dict(urllib.parse.parse_qsl(u.query, keep_blank_values=True))
-    security = (q.get("security") or "").lower()
-    orig_host = u.hostname
-    if security in ("tls", "reality", "xtls") and not q.get("sni"):
-        q["sni"] = orig_host
-    if not q.get("host") and q.get("type") in ("ws", "grpc", "httpupgrade"):
-        q["host"] = orig_host
-    port = clean["port"] or u.port
-    userinfo = (u.username or "")
-    if u.password:
-        userinfo += ":" + u.password
-    netloc = (userinfo + "@" if userinfo else "") + clean["ip"] + (f":{port}" if port else "")
-    base_name = urllib.parse.unquote(u.fragment) or proto
-    new_q = urllib.parse.urlencode(q)
-    return urllib.parse.urlunparse((u.scheme, netloc, u.path, u.params, new_q,
-                                    urllib.parse.quote(base_name + " 🧹 " + label)))
+    def repl(m):
+        p1, p2, p3, p4 = m.group(1), m.group(2), m.group(3) or "", m.group(4)
+        old_name = (urllib.parse.unquote(p4[1:]) if p4 else "Config").split(" | ")[0]
+        new_name = "#" + urllib.parse.quote(f"{old_name} | {clean['ip']} {label}")
+        return p1 + clean["ip"] + p3 + new_name
+
+    return INJECT_RE.sub(repl, uri)
 
 
 def inject(uri, clean, label):
@@ -148,7 +138,7 @@ def inject(uri, clean, label):
             return inject_vmess(uri, clean, label)
         return inject_uri(uri, clean, label, proto)
     except Exception:
-        return None
+        return uri
 
 
 # ----------------------- main -----------------------
@@ -181,11 +171,12 @@ def main():
     collected = dedupe(collected)
 
     # ترکیب با آی‌پی‌های تمیز
+    emojis = ["🚀", "🔥", "⚡", "💎", "👑", "🌟", "🎯", "🛡️", "🌐", "🛸"]
     final = []
     if clean_ips:
         for c in collected:
-            for i, clean in enumerate(clean_ips, 1):
-                label = clean["ip"] + (f":{clean['port']}" if clean["port"] else "") + f" #{i}"
+            for i, clean in enumerate(clean_ips):
+                label = emojis[i % len(emojis)] + "-" + str(i + 1)
                 inj = inject(c, clean, label)
                 if inj:
                     final.append(inj)
