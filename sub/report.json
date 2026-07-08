@@ -1,9 +1,9 @@
 {
-  "updated_at": "2026-07-07T19:16:22.912712+00:00",
+  "updated_at": "2026-07-08T09:15:32.793945+00:00",
   "channels": 5,
   "source_configs": 14,
   "clean_ips": 21,
-  "final_configs": 294,
+  "final_configs": 273,
   "log": [
     "OK @AR14N24B: 3 configs",
     "OK @npv_tunnelorg: 3 configs",
