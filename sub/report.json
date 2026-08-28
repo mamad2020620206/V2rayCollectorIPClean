@@ -1,11 +1,11 @@
 {
-  "updated_at": "2026-08-27T21:38:41.113226+00:00",
+  "updated_at": "2026-08-28T08:43:29.157410+00:00",
   "channels": 5,
-  "source_configs": 12,
+  "source_configs": 9,
   "clean_ips": 21,
-  "final_configs": 231,
+  "final_configs": 189,
   "log": [
-    "OK @AR14N24B: 3 configs",
+    "OK @AR14N24B: 0 configs",
     "OK @npv_tunnelorg: 3 configs",
     "OK @SOSkeyNET: 3 configs",
     "OK @proxymaann: 0 configs",
